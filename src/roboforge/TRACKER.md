@@ -9,7 +9,7 @@ Lab; everything else may.
 | `actuators/` | P3 | ⬜ |
 | `sensors/` | P3 / P6 | ⬜ |
 | `tasks/locomotion/` | P4 / P6 | ⬜ |
-| `eval/` | P5 | ⬜ |
+| `eval/` | P5 | 🟨 first piece lives in `scripts/eval_policy.py` (speed sweep vs real rated speed) |
 
 ## P3 — Actuator and sensor models
 
@@ -40,6 +40,8 @@ Approach:
   - Our P3 actuators.
   - Actions: 12 leg position targets + 4 wheel velocity targets.
 - [ ] Domain randomization: friction, mass and CoM offset, motor strength, kp/kd, delay, pushes; terrain curriculum.
+  - On Newton, randomize **terrain** friction (or lower terrain μ). Isaac Lab #8869: max-combine makes robot-friction DR a no-op.
+- [ ] Command ranges up to the real robot's rated speed. robot_lab defaults to ±1 m/s; see benchmarks B4.
 - [ ] Rewards stay config-only: one term per function, weights in config, per-term sums logged.
 
 | Gate | Criterion `[EST]`, recalibrated against the B2-W baseline |
@@ -77,4 +79,5 @@ the master tracker.
 
 ## Done
 
+- 2026-11-12 `compat.py`: OVPhysX/importer USD-schema workaround (master D-010).
 - 2026-11-12 `model/` ported and tested (8/8): spec, kinematics, inertia, parametric generator, contract.

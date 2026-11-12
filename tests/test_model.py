@@ -29,6 +29,11 @@ def test_every_number_has_provenance(s):
     assert spec.untagged_numbers(s.source_path) == []
 
 
+def test_benchmark_reference_numbers_have_provenance():
+    ref = Path(__file__).resolve().parents[1] / "benchmarks" / "reference_robots.yaml"
+    assert spec.untagged_numbers(ref) == []
+
+
 def test_joint_limits_derive_from_motors(s):
     for a in s.actuators.values():
         assert a.tau_peak == pytest.approx(a.motor.tau_peak * a.transmission)

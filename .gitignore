@@ -24,3 +24,6 @@ videos/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Benchmark raw logs (JSON results and summary.csv are committed)
+benchmarks/results/*.log

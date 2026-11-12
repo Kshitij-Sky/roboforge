@@ -1,0 +1,32 @@
+{
+  "timestamp": "20261112-194642",
+  "task": "RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0",
+  "physics": "newton_mjwarp",
+  "checkpoint": "D:\\RoboForge\\roboforge\\logs\\rsl_rl\\unitree_b2w_flat\\2026-11-12_19-32-24\\model_29.pt",
+  "envs_per_speed": 8,
+  "seconds": 4.0,
+  "rows": [
+    {
+      "cmd_mps": 0.5,
+      "achieved_mps": -0.038,
+      "tracking_rmse_mps": 0.544,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 1.0,
+      "achieved_mps": 0.032,
+      "tracking_rmse_mps": 0.97,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 2.0,
+      "achieved_mps": 0.043,
+      "tracking_rmse_mps": 1.96,
+      "fall_fraction": 0.0
+    }
+  ],
+  "max_tracked_speed_mps": null,
+  "real_rated_max_speed_mps": 4.17,
+  "reference_key": "unitree_b2w",
+  "criterion": "tracked = fall_fraction <= 5% and RMSE <= 25% of max(cmd, 1 m/s)"
+}

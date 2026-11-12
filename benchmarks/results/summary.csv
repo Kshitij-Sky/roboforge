@@ -1,0 +1,11 @@
+timestamp,label,task,physics,num_envs,status,iterations_completed,wall_s,steps_per_s_median,steps_per_s_first_quarter,steps_per_s_last_quarter,gpu_mem_peak_mb,gpu_temp_peak_c,gpu_sm_clock_median_mhz,ram_peak_mb
+20261112-192343,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,4096,ok,30,109.7,,,,2664.0,69.0,1410.0,2594.15234375
+20261112-192601,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,2048,ok,30,75.6,35149,36083,35279,1546.0,67.0,1785.0,2432.625
+20261112-192718,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,1024,ok,30,65.7,23592,22716,23368,934.0,64.0,1597.5,2370.66796875
+20261112-192839,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,4096,ok,30,87.5,55951,58107,53582,2664.0,72.0,1665.0,2559.25
+20261112-193007,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,8192,ok,30,125.9,73458,73549,73108,4876.0,78.0,1575.0,2828.8984375
+20261112-193214,B1,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,ovphysx,4096,ok,30,112.5,55838,58537,54343,4411.0,71.0,1410.0,5317.19921875
+20261112-193408,B1,RobotLab-Isaac-Velocity-Rough-Unitree-B2W-v0,newton_mjwarp,4096,ok,30,162.9,27152,28651,26892,3181.0,82.0,1755.0,3404.73046875
+20261112-193651,B1,RobotLab-Isaac-Velocity-Rough-Unitree-B2W-v0,ovphysx,4096,ok,30,212.7,19227,20519,19046,5489.0,85.0,1695.0,5768.6015625
+20261112-194025,B1,RobotLab-Isaac-Velocity-Flat-Unitree-Go2W-v0,newton_mjwarp,4096,ok,30,87.3,55119,58052,54634,2416.0,82.0,1605.0,2601.09375
+20261112-194153,B1,RobotLab-Isaac-Velocity-Rough-Unitree-Go2W-v0,newton_mjwarp,4096,ok,30,150.0,25680,27178,25480,3194.0,85.0,1740.0,2909.3359375

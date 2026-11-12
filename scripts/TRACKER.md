@@ -1,66 +1,78 @@
 # scripts/ — sub-tracker (P0: toolchain and machine qualification)
 
-← [Master tracker](../TRACKER.md) · Contents: workspace setup, model build, benchmarks.
+← [Master tracker](../TRACKER.md) · Contents: environment setup, model build, training
+benchmark, policy evaluation, upstream version switching. Benchmark *results* live in
+[benchmarks/](../benchmarks/TRACKER.md).
 
 ## P0 — Toolchain and machine qualification
 
 Goal: decide **on numbers** whether this laptop trains locally or we go to AWS.
 
-### Machine (measured 2026-11-12) `[MEAS]`
+### Machine `[MEAS]` (2026-11-12)
 
 | Item | Value | Requirement `[3P]` | OK? |
 |---|---|---|---|
-| GPU | RTX 3070 Ti **Laptop**, 8 GB, CC 8.6 | Turing+ | ✅ (throttles under sustained load) |
-| Driver | 616.64 | ≥ 580.88 on Windows | ✅ |
-| RAM | 15.7 GB | Isaac Sim path wants 32 GB | ⚠ kit-less only |
-| Disk | C: 51 GB free, D: 174 GB free | ~10–15 GB of wheels + cache `[EST]` | ⚠ keep `UV_CACHE_DIR` on D: |
-| Windows long paths | disabled | required | ❌ |
-| uv | not installed | required | ❌ |
-| WSL2 | enabled, no distro | optional fallback | — |
+| GPU | RTX 3070 Ti **Laptop**, 8 GB, CC 8.6 | Turing+ | ✅ but reaches 85 °C within 3 min of rough-terrain training |
+| Driver | 616.64 (CUDA 13.4) | ≥ 580.88 on Windows | ✅ |
+| RAM | 15.7 GB | Isaac Sim path wants 32 GB | ✅ kit-less: peak 5.8 GB measured |
+| Disk | Environment 5 GB + cache 5 GB, both on D: | — | ✅ |
+| Windows long paths | enabled (Sky); reboot pending | required | ✅ |
+| uv | 0.13.7 in `<workspace>\.tools` | required | ✅ |
+
+### Windows gotcha: app sandbox (MSIX) redirects AppData
+
+The Claude desktop app is an MSIX-packaged app. Anything it writes under `C:\Users\<you>\AppData`
+lands in the app's private store, not where your own terminal looks. So **every tool, cache and
+Python runtime lives inside the workspace folder**:
+- `<workspace>\.tools\uv.exe`
+- `<workspace>\.cache\{uv,python,warp}`
+
+Dot-source `scripts\env.ps1` in every PowerShell before working. Your terminal and agent
+sessions then see the same files.
 
 ### Steps
 
-- [ ] Sky: enable long paths (admin PowerShell), then reboot:
-  `New-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force`
-- [ ] Install uv. Set `UV_CACHE_DIR=D:\uv-cache`.
-- [ ] Run `scripts/setup_workspace.ps1`, which clones IsaacLab v3.0.0 and robot_lab v3.0.0 beside this repo.
-- [ ] Run `uv sync --extra importers --extra rsl-rl --extra ovphysx` and commit `uv.lock`. This also verifies `pyproject.toml`.
-- [ ] Re-run `pytest` inside the uv env, which has MuJoCo 3.12. Model tests so far ran on 3.10 in the old venv.
-- [ ] Train Cartpole on `newton_mjwarp` and on `ovphysx` (G0.1).
-- [ ] Benchmark at 1024 / 2048 / 4096 envs: steps/s, peak VRAM and RAM, GPU clock and temperature over **≥ 30 min**, plugged in, max-performance power plan.
-  - Tasks: robot_lab `RobotLab-Isaac-Velocity-Rough-Unitree-B2W-v0`, plus Isaac Lab Go2 rough.
-  - Write a `scripts/bench_training.py` that logs these.
-- [ ] One full default-length training run: wall time and final terrain level (G0.2).
-- [ ] Repeat at 4096 envs on `ovphysx` (G0.3).
-- [ ] Depth probe at 256 / 512 / 1024 envs with `newton_renderer`: Isaac Lab ANYmal-D distillation or the contrib `g1_terrain` depth task (G0.4).
-- [ ] Two seeds on the same backend; record the variance (G0.5).
+- [x] Sky: long paths enabled.
+- [x] uv 0.13.7 into `D:\RoboForge\.tools`. Caches and Python in `D:\RoboForge\.cache` (`scripts/env.ps1`).
+- [x] Upstreams as git submodules: `third_party/IsaacLab` @ v3.0.0, `third_party/robot_lab` @ v3.0.0.
+- [x] `uv sync --extra importers --extra rsl-rl --extra ovphysx --extra video`: 184 packages, `uv.lock` committed. Resolved versions: torch 2.11+cu130, Newton 1.6.1, MuJoCo 3.12.0, Warp 1.17.0, OVPhysX 0.6.4, RSL-RL 5.5.1.
+- [x] `pytest` inside the uv env (MuJoCo 3.12): 9/9.
+- [x] G0.1 via B0 (B2-W zero-agent) on both backends. That is a stronger check than Cartpole.
+  - PhysX needed `roboforge/compat.py` for the upstream schema clash; see master D-010.
+- [x] B1 throughput matrix: [benchmarks/](../benchmarks/TRACKER.md#results).
+- [ ] B2 sustained ≥ 30 min, and B3 1500-iteration B2-W flat (running).
+- [ ] Depth probe at 256 / 512 / 1024 envs (G0.4).
+- [ ] Seeds variance (G0.5).
+- [ ] Sky: reboot (long paths fully active for all processes), then from your own terminal: `. .\scripts\env.ps1; uv run pytest -q`.
 
 ### Gates
 
-| Gate | Criterion `[EST]` | If it fails |
+| Gate | Criterion `[EST]` | Result |
 |---|---|---|
-| G0.1 | Cartpole trains on both backends, Windows native | WSL2 Ubuntu 24.04, then AWS |
-| G0.2 | 4096 envs: VRAM ≤ 7.5 GB, RAM ≤ 13 GB, full rough-terrain run ≤ 3 h | 3–8 h: local for debug, AWS for production runs. > 8 h or OOM at 2048: AWS primary |
-| G0.3 | `ovphysx` runs locally | Cross-engine eval on AWS |
-| G0.4 | Depth env ≥ 512 envs in 7.5 GB | Depth training on AWS |
-| G0.5 | Seeds within each other's ±1σ band | Always report mean ± std over ≥ 3 seeds; MuJoCo-Warp is not run-to-run deterministic |
+| G0.1 | Both backends run Windows-native | ✅ newton_mjwarp; ✅ ovphysx (with compat shim) |
+| G0.2 | 4096 envs: VRAM ≤ 7.5 GB, RAM ≤ 13 GB, full rough run ≤ 3 h | VRAM ✅ 3.2 GB, RAM ✅ 3.4 GB. ❌ **time**: robot_lab's default 20 000 rough iterations ≈ 20 h at 27k steps/s. Flat 5 000 iterations ≈ 2.4 h ✅. Verdict pending B3: if policies converge well below the default budget, rough stays local overnight; otherwise production rough runs go to AWS |
+| G0.3 | `ovphysx` runs locally | ✅ (compat shim) |
+| G0.4 | Depth env ≥ 512 envs in 7.5 GB | ⬜ |
+| G0.5 | Seed variance recorded | ⬜ |
 
 ### AWS
 
 - [ ] Sky: account and IAM, **request a G-instance vCPU quota**, S3 bucket for runs, budget alarm.
-- [ ] One `g6e.xlarge` (L40S 48 GB) or `g5.xlarge` (A10G 24 GB), Ubuntu 24.04, driver ≥ 580.65.
-  - Run `scripts/setup_workspace.sh` and the same `uv.lock`.
-  - Re-run the benchmark to calibrate local against cloud.
-- Prices `[EST, verify on the AWS pricing page]`: g5.xlarge ≈ $1.0/h, g6e.xlarge ≈ $1.9/h on-demand. Spot is ~60–70% cheaper; use checkpoint resume.
+- [ ] One `g6e.xlarge` (L40S 48 GB) or `g5.xlarge` (A10G 24 GB), Ubuntu 24.04, driver ≥ 580.65. Run `bash scripts/setup_workspace.sh` and the B1 matrix to calibrate.
+- Prices `[EST, verify]`: g5.xlarge ≈ $1.0/h, g6e.xlarge ≈ $1.9/h on-demand; spot ~60–70% cheaper.
 
 ## Scripts in this folder
 
 | Script | Purpose | Status |
 |---|---|---|
+| `env.ps1` | Workspace environment (PATH to uv, caches on the workspace drive, UTF-8) | ✅ |
+| `setup_workspace.ps1` / `.sh` | Submodules + uv sync + tests + list tasks | ✅ (Windows path exercised step by step) |
 | `build_robot.py` | Robot spec → canonical MJCF + contract check (+ `--view`) | ✅ |
-| `setup_workspace.ps1` / `.sh` | Clone pinned IsaacLab + robot_lab beside the repo | written, untested until P0 |
-| `bench_training.py` | P0 benchmark logger | ⬜ |
+| `bench_training.py` | Runs `isaaclab train`, samples GPU/RAM every 2 s, writes `benchmarks/results/*.json` | ✅ |
+| `eval_policy.py` | B4: fixed speed sweep with a trained policy vs real rated speed | ✅ mechanics verified on an untrained policy |
+| `upstream.py` | `status` / `available` / `try` newer Isaac Lab or robot_lab on its own branch | ✅ `status` verified; `try` untested |
 
 ## Done
 
-- 2026-11-12 `build_robot.py` and the setup scripts written; machine facts measured.
+- 2026-11-12 Toolchain up. B0 and B1 done (results in benchmarks/). Eval and upstream scripts written.
+- 2026-11-12 `build_robot.py` and setup scripts written; machine facts measured.

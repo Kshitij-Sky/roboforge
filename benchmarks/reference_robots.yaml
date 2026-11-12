@@ -1,0 +1,54 @@
+# Real-robot reference values for the benchmark robots, next to what the sim models assume.
+#
+# Tags: [U] official Unitree spec table (marketing values, NOT bench-measured), [3P] third-party,
+#       [OBS] observed by Sky on a real robot (informal — note where/how), [EST] our derivation,
+#       [CFG] value read from the upstream sim config (robot_lab v3.0.0).
+# Real-world specs gathered 2026-07-28 from unitree.com product pages and reseller pages.
+#
+# The point of this file: a sim policy is only "good" relative to what the real machine does.
+# Every benchmark row reports the sim number next to the real one below.
+
+unitree_b2w:
+  tasks:
+    flat: RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0
+    rough: RobotLab-Isaac-Velocity-Rough-Unitree-B2W-v0
+  real:
+    mass_kg: 85.0                # [U]
+    wheel_diameter_m: 0.225      # [U]
+    max_speed_mps: 4.17          # [U] 15 km/h rated (a 20 km/h [3P] figure is the wheel-speed ceiling)
+    max_wheel_speed_radps: 50.0  # [U]
+    max_wheel_torque_nm: 40.0    # [U]
+    peak_leg_torque_nm: 360.0    # [U]
+    max_climb_deg: 45.0          # [U] ">45 deg", leg-assisted (not pure rolling)
+    max_step_m: 0.40             # [U]
+    walking_payload_kg: 40.0     # [U] ">40 kg"
+  sim_config:                    # what robot_lab v3.0.0 trains with — gaps vs real are findings, not bugs to hide
+    wheel_effort_limit_nm: 20.0  # [CFG] half the real 40 N.m
+    wheel_velocity_limit_radps: 50.0  # [CFG]
+    hip_thigh_effort_nm: 200.0   # [CFG]
+    calf_effort_nm: 320.0        # [CFG] vs 360 real peak
+    cmd_lin_vel_x_mps: [-1.0, 1.0]    # [CFG] default command range -> policy is never asked for real top speed
+    cmd_ang_vel_z_radps: [-1.0, 1.0]  # [CFG]
+    ppo_iterations_rough: 20000  # [CFG]
+    ppo_iterations_flat: 5000    # [CFG]
+  observed_by_sky: {}            # e.g. top_speed_mps: 3.5  # [OBS] demo at <place>, <date>, stopwatch over 10 m
+
+unitree_go2w:
+  tasks:
+    flat: RobotLab-Isaac-Velocity-Flat-Unitree-Go2W-v0
+    rough: RobotLab-Isaac-Velocity-Rough-Unitree-Go2W-v0
+  real:
+    mass_kg: 18.0                # [U]
+    wheel_diameter_m: 0.178      # [U] 7-inch pneumatic; [EST] metric conversion
+    max_speed_mps: 2.5           # [U]
+    max_climb_deg: 35.0          # [U] leg-assisted
+    max_obstacle_m: 0.70         # [U] "<70 cm"
+    payload_rated_kg: 8.0        # [U]
+    payload_max_kg: 12.0         # [U]
+    peak_knee_torque_nm: 45.0    # [U]
+  sim_config:
+    cmd_lin_vel_x_mps: [-1.0, 1.0]    # [CFG]
+    cmd_ang_vel_z_radps: [-1.0, 1.0]  # [CFG]
+    ppo_iterations_rough: 20000  # [CFG]
+    ppo_iterations_flat: 5000    # [CFG]
+  observed_by_sky: {}

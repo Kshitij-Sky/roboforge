@@ -22,7 +22,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ROBOTS_DIR = REPO_ROOT / "robots"
 
-PROVENANCE_TAGS = ("[U]", "[DR]", "[3P]", "[URDF]", "[EST]", "[WB]", "[MEAS]")
+PROVENANCE_TAGS = ("[U]", "[DR]", "[3P]", "[URDF]", "[EST]", "[WB]", "[MEAS]", "[OBS]", "[CFG]")
 FIDELITY_LEVELS = ("M0", "M1", "M2", "M3", "M4")
 LEG_JOINTS = ("hip", "thigh", "calf", "wheel")
 

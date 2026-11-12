@@ -71,7 +71,9 @@ src/roboforge/        Python package
   eval/               cross-engine evaluation harness
 tools/                CAD import, MJCF→USD conversion, validation gates, system identification
 deploy/               robot-side runtime (no Isaac Lab dependency)
-scripts/              workspace setup, model build, benchmarks
+benchmarks/           real-robot reference values + benchmark results on our hardware
+scripts/              workspace setup, model build, training benchmark, upstream version switching
+third_party/          git submodules, pinned: Isaac Lab, robot_lab (not our code; not modified)
 tests/
 ```
 
@@ -85,13 +87,17 @@ python scripts/build_robot.py v1_wheeled_quad --view   # inspect the standing po
 python -m pytest tests -q
 ```
 
-**Training stack.** Isaac Lab 3.0 with Python 3.12 and uv. Bring-up is phase P0 in the
-tracker:
+**Training stack.** Isaac Lab 3.0 and robot_lab are pinned as git submodules in
+`third_party/`. You need Python 3.12 (uv fetches it), uv and an NVIDIA GPU (Turing or newer):
 
 ```bash
-scripts/setup_workspace.sh        # or scripts\setup_workspace.ps1 on Windows
-uv sync --extra importers --extra rsl-rl --extra ovphysx
-uv run isaaclab list_envs --show_presets
+git clone --recursive https://github.com/Kshitij-Sky/roboforge.git && cd roboforge
+bash scripts/setup_workspace.sh          # Windows: powershell -File scripts\setup_workspace.ps1
+# Windows, every new terminal:  . .\scripts\env.ps1   (uv, caches and Python live in <workspace>\.tools / .cache)
+uv run isaaclab train --rl_library rsl_rl --task RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0 \
+    --viz none physics=newton_mjwarp     # or physics=ovphysx (PhysX) for the cross-check
+uv run python scripts/bench_training.py --task RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0 --num-envs 4096
+python scripts/upstream.py status        # pinned upstream versions; `try` tests newer ones on a branch
 ```
 
 ---

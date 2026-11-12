@@ -1,16 +1,16 @@
 # RoboForge — Isaac Lab 3.0 external project.
 # Packaging layout and the [tool.uv] block are adapted from the Isaac Lab external-project
 # template as used by robot_lab v3.0.0 (Copyright (c) 2022-2026, The Isaac Lab Project
-# Developers, BSD-3-Clause). Expected workspace (scripts/setup_workspace.*):
+# Developers, BSD-3-Clause). Upstreams are git submodules pinned to exact commits:
 #
-#   <workspace>/IsaacLab   (v3.0.0)
-#   <workspace>/robot_lab  (v3.0.0)
-#   <workspace>/roboforge  (this repo)
+#   third_party/IsaacLab   (isaac-sim/IsaacLab, tag v3.0.0)
+#   third_party/robot_lab  (fan-ziqi/robot_lab, tag v3.0.0)
 #
-# STATUS: dependency resolution not yet verified — first `uv sync` happens in P0 (TRACKER.md).
+# robot_lab's own uv sources point at ../IsaacLab, which resolves to third_party/IsaacLab.
+# Change versions with scripts/upstream.py (never by editing paths here).
 
 [build-system]
-requires = ["uv_build>=0.12.6,<0.13"]
+requires = ["uv_build>=0.12.6,<0.14"]
 build-backend = "uv_build"
 
 [project]
@@ -67,24 +67,28 @@ override-dependencies = [
     "packaging>=20,<27",
     "urllib3>=2.8.0",
 ]
+python-preference = "only-managed"
+
+[tool.uv.extra-build-variables]
+egl-probe = { CMAKE_POLICY_VERSION_MINIMUM = "3.5" }
 
 [tool.uv.sources]
-"robot_lab" = { path = "../robot_lab", editable = true }
-"isaaclab" = { path = "../IsaacLab/source/isaaclab", editable = true }
-"isaaclab-assets" = { path = "../IsaacLab/source/isaaclab_assets", editable = true }
-"isaaclab-contrib" = { path = "../IsaacLab/source/isaaclab_contrib", editable = true }
-"isaaclab-dev" = { path = "../IsaacLab", editable = true }
-"isaaclab-experimental" = { path = "../IsaacLab/source/isaaclab_experimental", editable = true }
-"isaaclab-mimic" = { path = "../IsaacLab/source/isaaclab_mimic", editable = true }
-"isaaclab-newton" = { path = "../IsaacLab/source/isaaclab_newton", editable = true }
-"isaaclab-ov" = { path = "../IsaacLab/source/isaaclab_ov", editable = true }
-"isaaclab-physx" = { path = "../IsaacLab/source/isaaclab_physx", editable = true }
-"isaaclab-ppisp" = { path = "../IsaacLab/source/isaaclab_ppisp", editable = true }
-"isaaclab-rl" = { path = "../IsaacLab/source/isaaclab_rl", editable = true }
-"isaaclab-tasks" = { path = "../IsaacLab/source/isaaclab_tasks", editable = true }
-"isaaclab-tasks-experimental" = { path = "../IsaacLab/source/isaaclab_tasks_experimental", editable = true }
-"isaaclab-teleop" = { path = "../IsaacLab/source/isaaclab_teleop", editable = true }
-"isaaclab-visualizers" = { path = "../IsaacLab/source/isaaclab_visualizers", editable = true }
+"robot_lab" = { path = "third_party/robot_lab", editable = true }
+"isaaclab" = { path = "third_party/IsaacLab/source/isaaclab", editable = true }
+"isaaclab-assets" = { path = "third_party/IsaacLab/source/isaaclab_assets", editable = true }
+"isaaclab-contrib" = { path = "third_party/IsaacLab/source/isaaclab_contrib", editable = true }
+"isaaclab-dev" = { path = "third_party/IsaacLab", editable = true }
+"isaaclab-experimental" = { path = "third_party/IsaacLab/source/isaaclab_experimental", editable = true }
+"isaaclab-mimic" = { path = "third_party/IsaacLab/source/isaaclab_mimic", editable = true }
+"isaaclab-newton" = { path = "third_party/IsaacLab/source/isaaclab_newton", editable = true }
+"isaaclab-ov" = { path = "third_party/IsaacLab/source/isaaclab_ov", editable = true }
+"isaaclab-physx" = { path = "third_party/IsaacLab/source/isaaclab_physx", editable = true }
+"isaaclab-ppisp" = { path = "third_party/IsaacLab/source/isaaclab_ppisp", editable = true }
+"isaaclab-rl" = { path = "third_party/IsaacLab/source/isaaclab_rl", editable = true }
+"isaaclab-tasks" = { path = "third_party/IsaacLab/source/isaaclab_tasks", editable = true }
+"isaaclab-tasks-experimental" = { path = "third_party/IsaacLab/source/isaaclab_tasks_experimental", editable = true }
+"isaaclab-teleop" = { path = "third_party/IsaacLab/source/isaaclab_teleop", editable = true }
+"isaaclab-visualizers" = { path = "third_party/IsaacLab/source/isaaclab_visualizers", editable = true }
 "omniverseclient" = { index = "pypi-public" }
 "ovphysx" = { index = "pypi-public" }
 "ovrtx" = { index = "pypi-public" }
