@@ -1,0 +1,125 @@
+# =============================================================================
+#  v1 wheeled quadruped — parametric robot spec (model source A, fidelity M0)
+#
+#  Single source of truth for the parametric model. `python scripts/build_robot.py v1_wheeled_quad`
+#  generates build/model.xml (canonical MJCF). Never hand-edit anything in build/.
+#
+#  Provenance tags — every number carries one; an untagged number fails the tests:
+#    [U] Unitree-published  [DR] Deep Robotics  [3P] third-party datasheet/source
+#    [URDF] derived from a robot description    [EST] our estimate
+#    [WB] computed by the earlier design workbench   [MEAS] measured on our own bench
+#
+#  Joint naming follows the robot contract (Unitree convention):
+#    hip   = abduction (roll, axis X)      thigh = hip pitch (axis Y)
+#    calf  = knee (pitch, axis Y)          wheel = hub drive (spin, axis Y)
+# =============================================================================
+meta:
+  name: v1_wheeled_quad
+  fidelity: M0          # M0 parametric/lumped -> M1 CAD -> M2 weighed -> M3 actuator bench fit -> M4 sysid
+  units: SI             # m, kg, s, N, N.m, rad
+  frame: "base: X forward, Y left, Z up"
+
+# --- Leg and body geometry ------------------------------------------------
+# Asymmetric leg: long thigh houses the proximal knee motor; short calf cuts the knee
+# lever arm and swing inertia. Reach l1 + l2 = 0.46 m.
+geometry:
+  l1: 0.280             # [EST] thigh length, hip-pitch axis -> knee
+  l2: 0.180             # [EST] calf length, knee -> wheel axle
+  abd: 0.135            # [WB] abduction offset, roll axis -> pitch axis
+  hip_x: 0.280          # [WB] half body length, hip-pitch axis to body centre
+  body_w: 0.260         # [WB] body width
+  body_h: 0.170         # [WB] body height
+  crouch_nominal: 0.78  # [WB] standing hip height as a fraction of reach
+  # Hollow rectangular link section, used for section-derived inertia tensors.
+  # The calf section is this scaled x0.72 (w) / x0.70 (h).
+  link_w: 0.056         # [WB] link outer width
+  link_h: 0.080         # [WB] link outer height
+  link_wall: 0.003      # [WB] link wall thickness
+
+# --- Link masses (lumped; CAD replaces these at fidelity M1) ----------------
+mass:
+  body: 31.60           # [EST] chassis incl. 1814 Wh battery, compute, sensors
+  hip: 3.64             # [3P] 2x RobStride 04 (1.42 each) + [EST] 0.80 framing
+  thigh: 2.675          # [EST] 1.00 structure + [3P] 1.675 knee actuator (proximal)
+  calf: 0.75            # [EST] structure only; conservative for a 0.18 m calf
+  wheel: 0.65           # [3P] tyre + rim, anchored to A2-W / Go2-W wheels; hub motor added from `motors`
+  payload: 25.0         # [WB] design walking payload (not in the model by default)
+
+# --- Joint actuators --------------------------------------------------------
+# Every v1 joint is 1:1 between motor output and joint (knee via a 1:1 proximal drive), so
+# joint torque/speed limits are DERIVED from the motor entry — not duplicated here.
+# Each limit is joint-level; armature = transmission^2 * gear_ratio^2 * rotor_inertia.
+actuators:
+  hip:   {motor: robstride_04, transmission: 1.0}   # [3P] abduction; transmission ratio [EST]
+  thigh: {motor: robstride_04, transmission: 1.0}   # [3P] hip pitch
+  calf:  {motor: qdd_s100_300, transmission: 1.0}   # [3P] knee, 1:1 proximal drive
+  wheel: {motor: wheel_hub, transmission: 1.0}      # [EST] hub motor placeholder
+
+# Joint operating ranges for the model envelope, rad. Not a structural claim.
+joint_range:
+  hip: [-0.90, 0.90]    # [EST]
+  thigh: [-1.00, 3.50]  # [EST]
+  calf: [-2.70, -0.30]  # [EST]
+
+# Viscous joint damping, N.m.s/rad — placeholders until bench data (fidelity M3).
+damping:
+  hip: 0.2              # [EST]
+  thigh: 0.2            # [EST]
+  calf: 1.0             # [EST]
+  wheel: 0.05           # [EST]
+
+# --- Motor library (selected motors only) -----------------------------------
+# tau_peak / tau_cont / vel_max are at the motor's own output shaft (after its gearbox).
+# Peak is not continuous: no vendor publishes a measured continuous rating we can trust.
+motors:
+  robstride_04:
+    tau_peak: 120.0        # [3P] RobStride 04 datasheet
+    tau_cont: 40.0         # [3P] datasheet rated (33% of peak)
+    gear_ratio: 9.0        # [3P]
+    rotor_inertia: 4.5e-4  # [EST] scaled from RobStride 03 by rotor size; J_rotor unpublished
+    mass: 1.420            # [3P]
+    vel_max: 20.9          # [3P] 200 rpm @ 48 V
+    eta_fwd: 0.94          # [EST] single-stage planetary
+    km2: 0.227             # [3P] Kt^2/(1.5*R_phase) from datasheet Kt 2.1 Nm/Arms, R_line 0.16 ohm
+    v_max: 60.0            # [3P] absolute max bus voltage (14S charged = 58.8 V)
+  qdd_s100_300:
+    tau_peak: 300.0        # [3P] supplier datasheet, 100 Arms for > 3 s
+    tau_cont: 60.0         # [3P] supplier natural-cooling continuous (20% of peak)
+    gear_ratio: 18.0       # [3P]
+    rotor_inertia: 5.0e-4  # [EST] outer-rotor, RS04 class
+    mass: 1.675            # [3P]
+    vel_max: 11.1          # [3P] 106 rpm at the output
+    eta_fwd: 0.90          # [EST] two-stage planetary
+    km2: 0.23              # [EST] three converging estimates (rated point, mass fit, same topology as RS04)
+    v_max: 72.0            # [3P] 12–72 V supply range
+  wheel_hub:
+    tau_peak: 25.0         # [WB] at the wheel
+    tau_cont: 9.0          # [EST] 35% of peak
+    gear_ratio: 5.0        # [EST]
+    rotor_inertia: 1.0e-4  # [EST]
+    mass: 0.65             # [3P] anchored to A2-W whole-wheel mass 0.98 kg minus tyre
+    vel_max: 63.0          # [WB] ~6.3 m/s on a 0.100 m wheel
+    eta_fwd: 0.94          # [EST]
+    km2: 0.05              # [EST] placeholder
+    v_max: 60.0            # [EST]
+
+# --- Wheel and contact --------------------------------------------------------
+wheel:
+  radius: 0.100         # [WB]
+  width: 0.055          # [WB]
+  mu: 0.80              # [EST] rubber on dry concrete — randomise in training
+
+power:
+  v_bus_nominal: 50.4   # [WB] 14S nominal
+  v_bus_charged: 58.8   # [3P] 14S x 4.2 V
+  capacity_wh: 1814     # [3P] cell rating x count; [EST] pack packaging
+
+# MuJoCo CPU reference settings for validation (MBD-grade). RL tasks set their own solver.
+reference_solver:
+  timestep: 0.0005      # [EST] MBD-grade
+  integrator: implicitfast
+  iterations: 150       # [EST]
+  tolerance: 1.0e-12    # [EST]
+contact:
+  solref: [0.005, 1.0]  # [EST] tuning parameter, NOT physical — always report the sweep
+  solref_sweep: [[0.002, 1.0], [0.005, 1.0], [0.01, 1.0], [0.02, 1.0]]  # [EST]

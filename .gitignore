@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv*/
+.pytest_cache/
+.ruff_cache/
+
+# Generated robot models — rebuild with scripts/build_robot.py
+robots/*/build/
+
+# Training / evaluation outputs
+logs/
+outputs/
+runs/
+wandb/
+videos/
+*.pt
+*.onnx
+*.ckpt
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
