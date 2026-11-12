@@ -145,7 +145,7 @@ def main(argv: list[str]) -> int:
     res = {
         "timestamp": dt.datetime.now().strftime("%Y%m%d-%H%M%S"),
         "task": a.task, "physics": physics, "checkpoint": str(a.model),
-        "envs_per_speed": a.envs_per_speed, "seconds": a.seconds, "rows": rows,
+        "argv": argv, "envs_per_speed": a.envs_per_speed, "seconds": a.seconds, "rows": rows,
         "max_tracked_speed_mps": max((r["cmd_mps"] for r in good), default=None),
         "real_rated_max_speed_mps": real_max, "reference_key": key,
         "criterion": "tracked = fall_fraction <= 5% and RMSE <= 25% of max(cmd, 1 m/s)",

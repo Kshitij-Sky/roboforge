@@ -12,26 +12,27 @@ same commit.
 ## Snapshot
 
 **Where we are:** the training stack runs on the laptop.
-- Isaac Lab 3.0.0 + robot_lab 3.0.0 are pinned as submodules; both physics engines (Newton
-  MuJoCo-Warp and PhysX) train Windows-native.
-- Benchmarks B0 and B1 are done:
-  - B2-W/Go2-W train at ~56k steps/s on flat ground and ~26–27k on rough at 4096 envs, using
-    ≤ 3.2 GB of VRAM.
-  - Heat, not memory, is the limit (85 °C).
-- A 1 500-iteration B2-W policy is training to measure time-to-usable-policy and sustained
-  thermals.
-- The capability evaluation against real-robot specs is written and its mechanics are verified.
+- Isaac Lab 3.0.0 + robot_lab 3.0.0 are pinned as submodules; both physics engines train
+  Windows-native.
+- Benchmarks:
+  - Flat ground trains at 49k steps/s sustained, rough at ~26k (4096 envs, ≤ 3.2 GB VRAM).
+    Heat is the limit (87 °C, −12%).
+  - A default robot_lab B2-W policy stops falling within ~2 minutes of training, but after
+    52 min it **tops out at 1.8 m/s**, against the real machine's rated 4.17 m/s.
+  - It **does not transfer from Newton to PhysX** (stays up, barely drives; ordering ruled out).
+- A PhysX-trained baseline is running to see which engine learns to drive at all.
+- Wheel-contact equivalence (G2.3) is now the most important open question for sim-to-real.
 
 **Next actions**
 
 | # | Who | Action | Sub-tracker |
 |---|---|---|---|
-| 1 | Claude | Finish B2/B3: report the sustained-throughput drift and the learning curve of the 1 500-iteration run | [benchmarks](benchmarks/TRACKER.md) |
-| 2 | Claude | B4: evaluate that policy against the real B2-W, then train the "real-range" variant (commands to 4.17 m/s, wheel torque 40 N·m `[U]`) | [benchmarks](benchmarks/TRACKER.md) |
-| 3 | Claude | B5: same policy on PhysX (cross-engine) | [benchmarks](benchmarks/TRACKER.md) |
+| 1 | Claude | B5: evaluate the PhysX-trained B2-W on both engines (run in progress) | [benchmarks](benchmarks/TRACKER.md#b5--cross-engine-same-checkpoint-played-on-physx) |
+| 2 | Claude | G2.3: constant-torque wheel roll test on both engines (the controlled version of the B5 gap) | [tools](tools/TRACKER.md) |
+| 3 | Claude | B4: train + evaluate `RoboForge-Velocity-Flat-B2W-RealRange-v0` (commands to 4.17 m/s, 40 N·m wheels) | [benchmarks](benchmarks/TRACKER.md) |
 | 4 | Sky | Add what you have actually seen real B2-W / Go2-W do to `benchmarks/reference_robots.yaml` → `observed_by_sky` (`[OBS]`, with where/how) | [benchmarks](benchmarks/TRACKER.md) |
 | 5 | Sky | Reboot once (long paths), then from your own terminal: `. .\scripts\env.ps1; uv run pytest -q` | [scripts](scripts/TRACKER.md) |
-| 6 | Sky | Request an AWS G-instance quota (needed if rough-terrain budgets stay at ~20 h locally) | [scripts](scripts/TRACKER.md#aws) |
+| 6 | Sky | Request an AWS G-instance quota (rough-terrain budgets are ~20 h locally) | [scripts](scripts/TRACKER.md#aws) |
 
 ## Status board
 
@@ -40,7 +41,7 @@ same commit.
 | Phase | What | Status | Gates | Sub-tracker |
 |---|---|---|---|---|
 | P0 | Toolchain + machine qualification (local vs AWS) | 🟨 | G0.1 ✅ · G0.2 🟨 (time) · G0.3 ✅ · G0.4–G0.5 ⬜ | [scripts/](scripts/TRACKER.md) |
-| B | Benchmarks: existing robots on this machine vs the real machines | 🟨 | B0 ✅ · B1 ✅ · B2–B3 🟨 · B4–B5 ⬜ | [benchmarks/](benchmarks/TRACKER.md) |
+| B | Benchmarks: existing robots on this machine vs the real machines | 🟨 | B0 ✅ · B1 ✅ · B2 ✅ · B3 🟨 · B4 🟨 · B5 🟨 | [benchmarks/](benchmarks/TRACKER.md) |
 | P1 | Robot description pipeline: parametric ✅ · SolidWorks ⬜ · MJCF→USD ⬜ | 🟨 | G1.1 ✅ · G1.2–G1.3 ⬜ | [robots/](robots/TRACKER.md), [tools/](tools/TRACKER.md) |
 | P2 | Model validation: conversion round-trip, RL-grade vs MBD-grade, PhysX equivalence | ⬜ | G2.1–G2.3 | [tools/](tools/TRACKER.md) |
 | P3 | Actuator + sensor models (incl. thermal) | ⬜ | G3.1–G3.3 | [src/roboforge/](src/roboforge/TRACKER.md) |
@@ -175,6 +176,12 @@ Dated, newest first. A decided entry is never edited; it is superseded by a new 
 
 Newest first.
 
+- **2026-11-12** B2–B5 on B2-W flat (Newton): sustained 49k steps/s (−12% thermal).
+  - B4: tops out at 1.8 m/s vs 4.17 rated; undershoots 25–30% inside its ±1 m/s training range.
+  - B5: the Newton-trained policy does not drive on PhysX. Ordering ruled out; friction pin not
+    sufficient.
+  - First own task `RoboForge-Velocity-Flat-B2W-RealRange-v0` registered (real envelope from
+    `reference_robots.yaml`).
 - **2026-11-12** Training stack and first benchmarks.
   - Submodules pinned: Isaac Lab v3.0.0, robot_lab v3.0.0.
   - `uv sync`: 184 packages, uv.lock committed. Tests 9/9 in the uv env.

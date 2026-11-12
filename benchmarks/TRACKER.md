@@ -13,10 +13,10 @@ Files in this folder:
 |---|---|---|---|
 | B0 | Smoke: each task loads and steps on each backend | `isaaclab zero_agent`, 4 envs, 100 steps | ✅ B2-W flat, both backends |
 | B1 | Throughput and memory at 1024 / 2048 / 4096 / 8192 envs | `bench_training.py`, 30 iterations, `newton_mjwarp` and `ovphysx` | ✅ |
-| B2 | Sustained (thermal) throughput | One ≥ 30 min run; compare first-quarter vs last-quarter steps/s | 🟨 running |
-| B3 | Training to a usable policy | Flat B2-W and Go2-W, time-boxed; record wall time to plateau | 🟨 B2-W flat 1500 it running |
-| B4 | Capability vs real (`scripts/eval_policy.py`, mechanics verified) | Command sweep up to the *real* top speed, slope and step tests, using a P5-lite eval script. Also a "real-range" variant: commands up to `[U]` max speed and wheel torque at `[U]` 40 N·m (B2-W) | ⬜ |
-| B5 | Cross-engine | Train on `newton_mjwarp`, play on `ovphysx`, and the reverse | ⬜ |
+| B2 | Sustained (thermal) throughput | One ≥ 30 min run; compare first-quarter vs last-quarter steps/s | ✅ |
+| B3 | Training to a usable policy | Flat B2-W and Go2-W, time-boxed; record wall time to plateau | 🟨 B2-W flat (Newton) done; Go2-W ⬜ |
+| B4 | Capability vs real (`scripts/eval_policy.py`) | Command sweep up to the *real* top speed (slope/step tests later). "Real-range" variant `RoboForge-Velocity-Flat-B2W-RealRange-v0`: commands to 4.17 m/s, wheels 40 N·m `[U]` | 🟨 default policy done; real-range ⬜ |
+| B5 | Cross-engine | Train on `newton_mjwarp`, play on `ovphysx`, and the reverse | 🟨 NP done (fails to drive); PhysX-trained run in progress |
 
 **Benchmark robots:** Unitree B2-W (our class: 85 kg `[U]`) and Go2-W (18 kg `[U]`), with
 robot_lab v3.0.0 tasks unchanged.
@@ -30,7 +30,7 @@ therefore can't show real top-speed capability; B4 exists to measure that gap.
 
 | Isaac Lab | robot_lab | Physics | B0 | B1 | B3 | Notes |
 |---|---|---|---|---|---|---|
-| v3.0.0 | v3.0.0 | `newton_mjwarp` | ✅ | ✅ | 🟨 | Pinned pair (default) |
+| v3.0.0 | v3.0.0 | `newton_mjwarp` | ✅ | ✅ | ✅ flat | Pinned pair (default) |
 | v3.0.0 | v3.0.0 | `ovphysx` | ✅ | ✅ | ⬜ | PhysX lineage = the engine with the long sim-to-real record. Needs `roboforge/compat.py` (importer schema clash, upstream bug) |
 | v3.0.0 | v3.0.0 | `isaacsim_physx` | — | — | — | Needs full Isaac Sim 6.2 (16 GB VRAM / 32 GB RAM plan `[3P]`) — AWS only |
 | v2.3.2 | v2.3.2 | PhysX (Isaac Sim 5.1) | — | — | — | Different Python (3.11) and API; needs full Isaac Sim — AWS only if ever needed |
@@ -80,7 +80,69 @@ VRAM is the nvidia-smi peak, including ~0.2 GB idle.
 - **Newton = PhysX on flat ground; Newton is 1.4× faster on rough** (terrain mesh + ray caster), with ~40% less VRAM and half the RAM.
 - **Rough-terrain training at robot_lab's default budget is an overnight-plus job here.** Whether that budget is needed is what B3 measures.
 
+### B2 — sustained throughput `[MEAS]` (B2-W flat, Newton, 4096 envs, 1 500 iterations)
+
+| Wall time | Median steps/s | vs 30-iteration burst | Peak °C | VRAM | RAM |
+|---|---|---|---|---|---|
+| 51.5 min | 49 340 | −12% (burst 55 951) | 87 | 3.1 GB | 2.6 GB |
+
+The GPU sits at its thermal limit (86–87 °C, ~97–121 W) and loses ~12% throughput. Plan with
+the **sustained** numbers: ≈ 2.0 s/iteration flat, so robot_lab's default 5 000 flat
+iterations ≈ 2.8 h.
+
+### B3 — learning curve, B2-W flat on Newton (robot_lab defaults, seed 42)
+
+| Iteration | 0 | 50 | 200 | 400 | 600 | 1000 | 1500 |
+|---|---|---|---|---|---|---|---|
+| Wall time | 0 | ~2 min | ~7 min | ~14 min | ~20 min | ~34 min | 51.5 min |
+| Mean episode length (of 1000) | 12 | 1000 | 1000 | 1000 | 1000 | 1000 | 1000 |
+| Linear tracking reward | 0.00 | 0.16 | 0.45 | 1.11 | 1.35 | 1.62 | 1.72 |
+| Yaw tracking reward | 0.00 | 0.18 | 0.29 | 0.39 | 0.34 | 0.39 | 0.44 |
+
+No falls after ~50 iterations. Tracking is still rising at 1 500 (not plateaued). One seed only.
+
+### B4 — capability vs the real B2-W (policy above, 384 robots, 10 s per speed)
+
+| Command (m/s) | 0.5 | 1.0 | 1.5 | 2.0 | 3.0 | 4.17 (real rated `[U]`) |
+|---|---|---|---|---|---|---|
+| Achieved on Newton (m/s) | 0.38 | 0.69 | 1.16 | 1.33 | 1.81 | 1.82 |
+| Falls | 0% | 0% | 0% | 0% | 0% | 0% |
+
+- The sim policy undershoots by 25–30% even inside its ±1 m/s training range, and **tops out at
+  ~1.8 m/s**, against the real machine's rated **4.17 m/s**.
+- Expected causes, in order:
+  1. Trained on ±1 m/s commands only `[CFG]`.
+  2. Wheel torque at half the real value (20 vs 40 N·m).
+  3. Training not converged (1 500 of the default 5 000 iterations).
+- The real-range variant isolates causes 1 and 2.
+
+### B5 — cross-engine (same checkpoint played on PhysX)
+
+| Command (m/s) | 0.5 | 1.0 | 2.0 | 4.17 |
+|---|---|---|---|---|
+| Newton (trained here) | 0.38 | 0.69 | 1.33 | 1.82 |
+| PhysX, default ordering | 0.06 | 0.06 | 0.12 | 0.24 |
+| PhysX, `mjwarp` joint/body ordering | 0.04 | 0.05 | 0.14 | 0.27 |
+| PhysX, ordering + robot friction pinned to 1.0 | 0.06 | 0.07 | 0.19 | 0.27 |
+
+Result files, in table order: `20261112-203941` (Newton), `-204106`, `-204326`, `-204654`.
+Later eval files also record their full argv.
+
+- **The Newton-trained policy does not transfer to PhysX.** It stays upright (0 falls) but barely
+  drives.
+- **Ruled out:** joint/body ordering. Both engines report identical joint and body lists with the
+  override.
+- **Not sufficient alone:** the friction max-vs-multiply difference (Isaac Lab #8869; robot_lab
+  randomizes robot μ 0.3–1.0, which Newton masks to 1.0).
+- **Wheels spin at similar speeds and torques on both engines**, so the remaining suspects are
+  wheel–ground contact (cylinder vs convex representation, contact softness) and drive semantics.
+- Gate G2.3 (constant-torque wheel test, both engines) is the controlled experiment that isolates
+  this. Until it passes, **no wheeled policy is trusted on either engine alone**.
+- Next: a PhysX-trained policy played on Newton gives the PN direction, and tells us which engine
+  can learn to drive at all.
+
 ## Done
 
+- 2026-11-12 B2 (sustained −12%), B3 (B2-W flat learning curve), B4 (tops out at 1.8 vs 4.17 m/s real), B5 NP (does not transfer; ordering ruled out).
 - 2026-11-12 B0 (both backends) and B1 (9 configurations) on the pinned pair.
 - 2026-11-12 Protocol, reference data and harness (`scripts/bench_training.py`) written.

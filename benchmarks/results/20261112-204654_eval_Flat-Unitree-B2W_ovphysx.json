@@ -1,0 +1,50 @@
+{
+  "timestamp": "20261112-204654",
+  "task": "RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0",
+  "physics": "ovphysx",
+  "checkpoint": "logs\\rsl_rl\\unitree_b2w_flat\\2026-11-12_19-47-06\\model_1499.pt",
+  "envs_per_speed": 64,
+  "seconds": 10.0,
+  "rows": [
+    {
+      "cmd_mps": 0.5,
+      "achieved_mps": 0.062,
+      "tracking_rmse_mps": 0.487,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 1.0,
+      "achieved_mps": 0.075,
+      "tracking_rmse_mps": 0.954,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 1.5,
+      "achieved_mps": 0.11,
+      "tracking_rmse_mps": 1.417,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 2.0,
+      "achieved_mps": 0.189,
+      "tracking_rmse_mps": 1.836,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 3.0,
+      "achieved_mps": 0.178,
+      "tracking_rmse_mps": 2.849,
+      "fall_fraction": 0.0
+    },
+    {
+      "cmd_mps": 4.17,
+      "achieved_mps": 0.266,
+      "tracking_rmse_mps": 3.938,
+      "fall_fraction": 0.0
+    }
+  ],
+  "max_tracked_speed_mps": null,
+  "real_rated_max_speed_mps": 4.17,
+  "reference_key": "unitree_b2w",
+  "criterion": "tracked = fall_fraction <= 5% and RMSE <= 25% of max(cmd, 1 m/s)"
+}
