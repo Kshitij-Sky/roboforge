@@ -189,6 +189,10 @@ Dated, newest first. A decided entry is never edited; it is superseded by a new 
 
 Newest first.
 
+- **2026-11-13** `rf play --terrain flat|rough|slope_up|slope_down|stairs_up|stairs_down|boxes|mixed
+  --difficulty 0..1` (`src/roboforge/terrains.py`). Headless check: robots spawn upright on each
+  tile platform. The panel flags blind policies (flat tasks have no height scan).
+
 - **2026-11-13** Native-viewer feedback round.
   - Resets in `rf play` came from robot_lab's 20 s episode limit, not tilt; playback now resets
     only on the button.

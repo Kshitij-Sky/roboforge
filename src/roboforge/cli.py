@@ -143,6 +143,7 @@ def cmd_play(a) -> int:
         argv += ["--vmax", str(a.vmax)]
     if a.train_conditions:
         argv += ["--train-conditions"]
+    argv += ["--terrain", a.terrain, "--difficulty", str(a.difficulty)]
     return play_main(argv)
 
 
@@ -219,7 +220,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("runs"); p.add_argument("experiment", nargs="?"); p.set_defaults(fn=cmd_runs)
     p = sub.add_parser("play"); p.add_argument("run"); p.add_argument("--checkpoint", default="latest")
     p.add_argument("--physics"); p.add_argument("--envs", type=int, default=1); p.add_argument("--vmax", type=float)
-    p.add_argument("--train-conditions", action="store_true", help="keep random-flip resets and pushes"); p.set_defaults(fn=cmd_play)
+    p.add_argument("--train-conditions", action="store_true", help="keep random-flip resets and pushes")
+    p.add_argument("--terrain", default="flat"); p.add_argument("--difficulty", type=float, default=0.5); p.set_defaults(fn=cmd_play)
     p = sub.add_parser("eval"); p.add_argument("run"); p.add_argument("--checkpoint", default="latest"); p.add_argument("--physics")
     p.add_argument("--axis", choices=("forward", "lateral", "yaw"), default="forward")
     p.add_argument("--speeds", type=float, nargs="+"); p.add_argument("--envs-per-speed", type=int, default=64)

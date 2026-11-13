@@ -1,6 +1,7 @@
 """Watch and drive a trained run in Newton's native viewer window.
 
     uv run rf play <run> [--checkpoint latest|<iter>] [--physics newton_mjwarp|ovphysx] [--envs 1]
+                         [--terrain flat|rough|slope_up|slope_down|stairs_up|stairs_down|boxes|mixed] [--difficulty 0.5]
 
 Opens a desktop window (Newton GL viewer, drawn straight from GPU memory). Isaac Lab's own
 panel gives pause/reset; the "RoboForge" panel adds:
@@ -55,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--vmax", type=float, default=None, help="forward slider max (default: real rated speed)")
     ap.add_argument("--train-conditions", action="store_true",
                     help="keep training resets (random flips) and pushes instead of clean upright resets")
+    ap.add_argument("--terrain", default="flat", help="flat | rough | slope_up | slope_down | stairs_up | "
+                    "stairs_down | boxes | mixed (see roboforge/terrains.py)")
+    ap.add_argument("--difficulty", type=float, default=0.5, help="terrain difficulty 0..1 (step height, slope, ...)")
     a = ap.parse_args(argv)
 
     from roboforge.runs import code_drift, find_run
@@ -71,7 +75,10 @@ def main(argv: list[str] | None = None) -> int:
 
     import torch
 
+    from roboforge import terrains
     from roboforge.isaac_session import as_torch, session, tilted, validation_conditions
+
+    scene_info = {}
 
     def hook(cfg):
         cfg.scene.num_envs = a.envs
@@ -84,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
         cfg.episode_length_s = 1.0e6
         if not a.train_conditions:
             validation_conditions(cfg)
+        terrains.apply(cfg, a.terrain, a.difficulty, a.envs)
+        scene_info["blind"] = getattr(cfg.scene, "height_scanner", None) is None
 
     with session(m["task"], model, physics=physics, overrides=run.play_args(), viz="newton_gl", env_cfg_hook=hook) as s:
         u = s.unwrapped
@@ -114,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
             imgui.text("RoboForge")
             imgui.text(run.id)
             imgui.text(f"{st['ckpt']}  |  trained {m['physics']}, playing {physics}")
+            imgui.text(f"terrain: {a.terrain}" + (f" (difficulty {a.difficulty:.2f})" if a.terrain != "flat" else "")
+                       + ("  |  policy is BLIND (no height scan)" if scene_info.get("blind") else ""))
             for d in drift:
                 imgui.text_colored(imgui.ImVec4(1.0, 0.6, 0.2, 1.0), f"code drift: {d}")
             _, st["kb"] = imgui.checkbox("Keyboard drive  I/K fwd-back  J/L sideways  U/O turn", st["kb"])

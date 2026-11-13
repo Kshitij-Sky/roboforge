@@ -13,7 +13,7 @@ together.
 | Make a variant | `uv run rf new my_variant --from b2w_flat_default`, then edit `experiments/my_variant.yaml` |
 | Train (only when Sky says so) | `uv run rf train my_variant [--detach] [--note "why"]` |
 | Try one change without a new file | `uv run rf train b2w_flat_default --set env.rewards.upward.weight=0.0 --note "..."` |
-| Watch + drive a policy (native viewer window, RoboForge panel in the side bar) | `uv run rf play <run> [--envs 9] [--train-conditions]`. Keys: I/K forward/back, J/L sideways, U/O turn |
+| Watch + drive a policy (native viewer window, RoboForge panel in the side bar) | `uv run rf play <run> [--envs 9] [--train-conditions]`. Keys: I/K forward/back, J/L sideways, U/O turn. Terrain: `--terrain rough\|slope_up\|slope_down\|stairs_up\|stairs_down\|boxes\|mixed --difficulty 0..1` (needs a relaunch) |
 | Benchmark a checkpoint | `uv run rf eval <run> [--axis forward\|lateral\|yaw] [--checkpoint 1000] [--physics ovphysx]` |
 | Side-by-side | `uv run rf compare <run> <run>` |
 
@@ -29,6 +29,10 @@ together.
   land every `save_interval` iterations (default 100), and `rf play` can open them mid-training
   ("Refresh checkpoints" in the panel).
 - Evaluations are saved inside the run: `<run>/eval/<checkpoint>_<physics>.json`.
+
+**Where policies come from:** every checkpoint listed by `rf runs` was trained on this laptop.
+"default" in an experiment name means robot_lab's task config unchanged; it does **not** mean a
+pre-trained policy. robot_lab ships no checkpoints.
 
 ## Experiments
 
