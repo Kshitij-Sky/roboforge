@@ -10,3 +10,4 @@ timestamp,label,task,physics,num_envs,status,iterations_completed,wall_s,steps_p
 20261112-194025,B1,RobotLab-Isaac-Velocity-Flat-Unitree-Go2W-v0,newton_mjwarp,4096,ok,30,87.3,55119,58052,54634,2416.0,82.0,1605.0,2601.09375
 20261112-194153,B1,RobotLab-Isaac-Velocity-Rough-Unitree-Go2W-v0,newton_mjwarp,4096,ok,30,150.0,25680,27178,25480,3194.0,85.0,1740.0,2909.3359375
 20261112-194655,B2+B3 flat 1500it,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,newton_mjwarp,4096,ok,1500,3088.0,49340,50458,50193,3093.0,87.0,1665.0,2583.671875
+20261112-204720,B5 PhysX-trained flat 1500it,RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0,ovphysx,4096,timeout,122,11198.4,55758,44181,41640,4677.0,78.0,1785.0,5283.46484375

@@ -1,0 +1,9 @@
+# Same baseline trained on PhysX (kit-less OVPhysX): the engine with the long sim-to-real record.
+# Paired with b2w_flat_default for the cross-engine benchmark (B5).
+description: B2-W flat, robot_lab defaults, PhysX
+task: RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0
+physics: ovphysx
+num_envs: 4096
+max_iterations: 1500
+seed: 42
+overrides: {}

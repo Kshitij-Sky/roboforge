@@ -1,0 +1,8 @@
+# Baseline: robot_lab's Go2-W flat task exactly as shipped, Newton.
+description: Go2-W flat, robot_lab defaults, Newton
+task: RobotLab-Isaac-Velocity-Flat-Unitree-Go2W-v0
+physics: newton_mjwarp
+num_envs: 4096
+max_iterations: 1500
+seed: 42
+overrides: {}

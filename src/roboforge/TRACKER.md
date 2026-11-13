@@ -9,7 +9,8 @@ Lab; everything else may.
 | `actuators/` | P3 | ⬜ |
 | `sensors/` | P3 / P6 | ⬜ |
 | `tasks/locomotion/` | P4 / P6 | ⬜ |
-| `eval/` | P5 | 🟨 first piece lives in `scripts/eval_policy.py` (speed sweep vs real rated speed) |
+| `cli.py` `runs.py` `play.py` `evaluate.py` `isaac_session.py` | `rf` experiment tool: train/runs/play/eval/compare | 🟨 implemented; awaiting Sky's visual check |
+| `eval/` | P5 | 🟨 speed sweep in `evaluate.py`; scenario suite later |
 
 ## P3 — Actuator and sensor models
 

@@ -27,3 +27,6 @@ Thumbs.db
 
 # Benchmark raw logs (JSON results and summary.csv are committed)
 benchmarks/results/*.log
+
+# Viewer window layout (ImGui)
+imgui.ini

@@ -159,6 +159,12 @@ def main() -> int:
                     cur[m.group(1).strip()] = float(m.group(2))
                 if any(k in line for k in OOM_MARKERS):
                     status = "oom"
+                if "CUDA error" in line and status == "ok":
+                    # e.g. CUDA error 999 after a driver reset: the trainer can hang forever afterwards
+                    status = "cuda_error"
+                    log.write(line)
+                    proc.kill()
+                    break
                 if time.time() - t0 > a.timeout_min * 60:
                     status = "timeout"
                     proc.kill()

@@ -69,7 +69,7 @@ sessions then see the same files.
 | `setup_workspace.ps1` / `.sh` | Submodules + uv sync + tests + list tasks | ✅ (Windows path exercised step by step) |
 | `build_robot.py` | Robot spec → canonical MJCF + contract check (+ `--view`) | ✅ |
 | `bench_training.py` | Runs `isaaclab train`, samples GPU/RAM every 2 s, writes `benchmarks/results/*.json` | ✅ |
-| `eval_policy.py` | B4: fixed speed sweep with a trained policy vs real rated speed | ✅ mechanics verified on an untrained policy |
+| *(moved)* | Policy evaluation and playback now live in the package: `uv run rf eval` / `rf play` (see [experiments/](../experiments/TRACKER.md)) | — |
 | `upstream.py` | `status` / `available` / `try` newer Isaac Lab or robot_lab on its own branch | ✅ `status` verified; `try` untested |
 
 ## Done

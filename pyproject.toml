@@ -27,6 +27,9 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.scripts]
+rf = "roboforge.cli:main"
+
 [project.entry-points."isaaclab.tasks"]
 roboforge = "roboforge.tasks"
 

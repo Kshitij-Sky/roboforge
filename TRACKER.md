@@ -27,12 +27,11 @@ same commit.
 
 | # | Who | Action | Sub-tracker |
 |---|---|---|---|
-| 1 | Claude | B5: evaluate the PhysX-trained B2-W on both engines (run in progress) | [benchmarks](benchmarks/TRACKER.md#b5--cross-engine-same-checkpoint-played-on-physx) |
-| 2 | Claude | G2.3: constant-torque wheel roll test on both engines (the controlled version of the B5 gap) | [tools](tools/TRACKER.md) |
-| 3 | Claude | B4: train + evaluate `RoboForge-Velocity-Flat-B2W-RealRange-v0` (commands to 4.17 m/s, 40 N·m wheels) | [benchmarks](benchmarks/TRACKER.md) |
-| 4 | Sky | Add what you have actually seen real B2-W / Go2-W do to `benchmarks/reference_robots.yaml` → `observed_by_sky` (`[OBS]`, with where/how) | [benchmarks](benchmarks/TRACKER.md) |
-| 5 | Sky | Reboot once (long paths), then from your own terminal: `. .\scripts\env.ps1; uv run pytest -q` | [scripts](scripts/TRACKER.md) |
-| 6 | Sky | Request an AWS G-instance quota (rough-terrain budgets are ~20 h locally) | [scripts](scripts/TRACKER.md#aws) |
+| 1 | Sky | Visually check the new `rf play` viewer and `rf eval` (commands in [experiments](experiments/TRACKER.md#workflow)); give feedback | [experiments](experiments/TRACKER.md) |
+| 2 | Sky | Say which training runs to start, if any: `b2w_flat_default_physx` (B5), `b2w_flat_realrange` (B4), `go2w_flat_default` | [experiments](experiments/TRACKER.md#experiments) |
+| 3 | Sky | Add what you have seen real B2-W / Go2-W do to `benchmarks/reference_robots.yaml` → `observed_by_sky` (`[OBS]`) | [benchmarks](benchmarks/TRACKER.md) |
+| 4 | Claude | G2.3: constant-torque wheel roll test on both engines (no training needed) | [tools](tools/TRACKER.md) |
+| 5 | Sky | Request an AWS G-instance quota (rough-terrain budgets are ~20 h locally) | [scripts](scripts/TRACKER.md#aws) |
 
 ## Status board
 
@@ -41,12 +40,13 @@ same commit.
 | Phase | What | Status | Gates | Sub-tracker |
 |---|---|---|---|---|
 | P0 | Toolchain + machine qualification (local vs AWS) | 🟨 | G0.1 ✅ · G0.2 🟨 (time) · G0.3 ✅ · G0.4–G0.5 ⬜ | [scripts/](scripts/TRACKER.md) |
+| E | Experiment workflow: `rf` train / runs / play (native viewer) / eval / compare | 🟨 implemented; native-viewer panel awaiting Sky's check | — | [experiments/](experiments/TRACKER.md) |
 | B | Benchmarks: existing robots on this machine vs the real machines | 🟨 | B0 ✅ · B1 ✅ · B2 ✅ · B3 🟨 · B4 🟨 · B5 🟨 | [benchmarks/](benchmarks/TRACKER.md) |
 | P1 | Robot description pipeline: parametric ✅ · SolidWorks ⬜ · MJCF→USD ⬜ | 🟨 | G1.1 ✅ · G1.2–G1.3 ⬜ | [robots/](robots/TRACKER.md), [tools/](tools/TRACKER.md) |
 | P2 | Model validation: conversion round-trip, RL-grade vs MBD-grade, PhysX equivalence | ⬜ | G2.1–G2.3 | [tools/](tools/TRACKER.md) |
 | P3 | Actuator + sensor models (incl. thermal) | ⬜ | G3.1–G3.3 | [src/roboforge/](src/roboforge/TRACKER.md) |
 | P4 | Blind wheeled-legged locomotion (B2-W reference → v1) | ⬜ | G4.1–G4.2 | [src/roboforge/](src/roboforge/TRACKER.md) |
-| P5 | Cross-engine evaluation harness | 🟨 `eval_policy.py` speed sweep | G5 | [src/roboforge/](src/roboforge/TRACKER.md) |
+| P5 | Cross-engine evaluation harness | 🟨 `rf eval` speed sweep | G5 | [src/roboforge/](src/roboforge/TRACKER.md) |
 | P6 | Depth perception (height-scan teacher → depth student) | ⬜ | G6 | [src/roboforge/](src/roboforge/TRACKER.md) |
 | P7 | Deploy runtime + sim-in-the-loop | ⬜ | G7.1–G7.3 | [deploy/](deploy/TRACKER.md) |
 | P8 | Real-to-sim loop (MCAP logs, sysid, refit) | ⬜ | — | [tools/](tools/TRACKER.md) |
@@ -74,7 +74,7 @@ Closed: N1/N2 (fresh public repo `Kshitij-Sky/roboforge`), N3 (long paths enable
 | Robot-side runtime, MuJoCo/Gazebo sim-to-sim, real Unitree deploys (libtorch/onnxruntime) | **rl_sar** | 🟨 Linux/ROS, no latency or golden obs tests | Evaluate in P7 |
 | Fair cross-robot benchmarking, multi-seed analysis | **quadrrl** (Isaac Lab 2.3.2) | 🟨 needs port to 3.0 | Port the idea in P5 |
 | Robot contract, parametric model, provenance enforcement | ours | ✅ M0 done | — |
-| Training/hardware benchmark, capability-vs-real eval | ours (`bench_training.py`, `eval_policy.py`) | ✅ first version | Extend in B4/B5 |
+| Training/hardware benchmark, capability-vs-real eval, experiment/run management, native-viewer playback | ours (`bench_training.py`, `rf`) | ✅ first version | Extend in B4/B5 |
 | SolidWorks → MJCF importer + CAD conventions | — | ❌ | P1 |
 | MJCF → USD with round-trip proof | Isaac Lab converter, no verification | 🟨 | P1/P2 |
 | Actuator thermal model, randomized delay, driver PD at real rate | Isaac Lab DCMotor (clamp only) | 🟨 | P3 |
@@ -103,6 +103,17 @@ change is merged only if it wins on the benchmark protocol.
 
 Dated, newest first. A decided entry is never edited; it is superseded by a new one.
 
+- **D-013 (2026-11-13)** *Supersedes D-012's viewer choice.* Policies are watched in
+  **Newton's native GL viewer** (`--viz newton_gl`) with a RoboForge ImGui side panel. The
+  browser/viser viewer is dropped: streaming cost a fixed ~40 ms per frame on this laptop, while
+  Sky saw the native window run smoothly with 9 robots.
+  - `rf play` and `rf eval` reset robots upright with no pushes; falls are measured as base tilt
+    > 60°.
+  - Visual checks are Sky's: Claude hands over commands and does not judge visuals.
+- **D-012 (2026-11-13)** Experiments are YAML files (`experiments/`) and runs are frozen
+  folders with a manifest. Playback and evaluation always rebuild a run from its own manifest
+  (overrides + joint/body ordering), never from the current experiment file. Browser playback
+  uses Isaac Lab's viser visualizer plus a RoboForge panel (command sliders, checkpoint picker).
 - **D-011 (2026-11-12)** Every tool, cache and Python runtime lives inside the workspace folder
   (`<workspace>\.tools`, `<workspace>\.cache`), set by `scripts/env.ps1`. Reason: the Claude
   desktop app is MSIX-sandboxed, so its writes to `C:\Users\…\AppData` are redirected to a
@@ -169,12 +180,49 @@ Dated, newest first. A decided entry is never edited; it is superseded by a new 
    quietly fixed.
 7. **Third-party code** keeps its license header and gets a credits line in the README.
    Submodules are never edited.
-8. **No new documents.** Status goes here and in the sub-trackers. Explanations go in code
+8. **No training runs without Sky's explicit go-ahead.** Tooling is handed over as commands
+   for Sky to verify visually.
+9. **No new documents.** Status goes here and in the sub-trackers. Explanations go in code
    docstrings or the README.
 
 ## Done log
 
 Newest first.
+
+- **2026-11-13** Native-viewer feedback round.
+  - Resets in `rf play` came from robot_lab's 20 s episode limit, not tilt; playback now resets
+    only on the button.
+  - Keyboard driving added (I/K, J/L, U/O).
+  - `rf eval --axis forward|lateral|yaw` added; pass criterion tightened.
+  - **Valid B4 (Sky's run):** forward tracked 0.5→4.17 m/s with 0 falls. The earlier
+    "1.8 m/s" is retracted.
+  - **The policy does not turn in place.** Wheel torque ≤ 4 N·m; Claude's torque-cap guess was
+    refuted by a 40 N·m eval.
+  - B5 re-run: PhysX drives at ~20–25% of command. The B2-W's mesh wheel collision is the next
+    suspect.
+
+- **2026-11-13** Viewer and metric fixes after Sky's first look.
+  - **Odd orientations explained:** robot_lab's B2-W resets robots in a random roll, pitch and yaw
+    (±180°) to train self-righting.
+  - **Correction:** robot_lab never ends an episode on a flip, so the "0% falls" in B4/B5 counted
+    nothing. Speeds there include time spent self-righting. `rf eval` now starts upright with no
+    pushes and counts falls as tilt > 60°; the B4/B5 numbers need a re-run (`rf eval`, no
+    training).
+  - **Frame rate:** the simulation runs at 9.7 ms/step. The browser viewer added ~40 ms per
+    frame (per-mesh GPU→CPU copies plus websocket, independent of robot count), so it was
+    replaced by the native viewer (D-013).
+
+- **2026-11-13** `rf` experiment tool: experiments as YAML, frozen run manifests, `rf play`
+  (browser viewer + command sliders + checkpoint picker), `rf eval` (saved per run),
+  `rf compare`, `rf adopt`.
+  - The B3 B2-W run is adopted as `b2w_flat_default`.
+  - `viser` extra installed; browser viewer later dropped for the native viewer (D-013).
+  - Claude started a real-range training without OK; Sky stopped it. Rule 8 added. The run
+    folder is annotated "not a result".
+  - **Correction:** the 2026-11-12 PhysX training was *not* cut by the reboot, as Claude first
+    said. It crashed at iteration 122 (~4 min) with CUDA error 999 inside OVPhysX's GPU contact
+    view, then hung ~3 h until the harness timeout. Newton ran 52 min on the same GPU. Cause
+    open: a driver reset (TDR) on a hot laptop GPU, or an OVPhysX bug.
 
 - **2026-11-12** B2–B5 on B2-W flat (Newton): sustained 49k steps/s (−12% thermal).
   - B4: tops out at 1.8 m/s vs 4.17 rated; undershoots 25–30% inside its ±1 m/s training range.

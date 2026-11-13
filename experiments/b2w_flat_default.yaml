@@ -1,0 +1,17 @@
+# Baseline: robot_lab's B2-W flat task exactly as shipped, trained on Newton (MuJoCo-Warp).
+description: B2-W flat, robot_lab defaults, Newton
+task: RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0
+physics: newton_mjwarp
+num_envs: 4096
+max_iterations: 1500
+seed: 42
+overrides: {}
+# Overrides use the same keys as Isaac Lab's resolved config (see a run's params/env.yaml and
+# params/agent.yaml). Examples:
+#   env.rewards.track_lin_vel_xy_exp.weight: 3.0        # reward weight
+#   env.rewards.upward.weight: 0.0                      # switch a reward term off
+#   env.commands.base_velocity.ranges.lin_vel_x: [-1.0, 2.0]
+#   env.scene.robot.actuators.wheel.joint_effort_limit: 40.0
+#   agent.actor.hidden_dims: [256, 128, 64]             # policy network
+#   agent.algorithm.learning_rate: 0.0005
+#   agent.save_interval: 50                             # checkpoint every 50 iterations

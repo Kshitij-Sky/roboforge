@@ -71,6 +71,7 @@ src/roboforge/        Python package
   eval/               cross-engine evaluation harness
 tools/                CAD import, MJCF→USD conversion, validation gates, system identification
 deploy/               robot-side runtime (no Isaac Lab dependency)
+experiments/          experiment files (task + engine + overrides); runs land in logs/ (git-ignored)
 benchmarks/           real-robot reference values + benchmark results on our hardware
 scripts/              workspace setup, model build, training benchmark, upstream version switching
 third_party/          git submodules, pinned: Isaac Lab, robot_lab (not our code; not modified)
@@ -94,9 +95,12 @@ python -m pytest tests -q
 git clone --recursive https://github.com/Kshitij-Sky/roboforge.git && cd roboforge
 bash scripts/setup_workspace.sh          # Windows: powershell -File scripts\setup_workspace.ps1
 # Windows, every new terminal:  . .\scripts\env.ps1   (uv, caches and Python live in <workspace>\.tools / .cache)
-uv run isaaclab train --rl_library rsl_rl --task RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0 \
-    --viz none physics=newton_mjwarp     # or physics=ovphysx (PhysX) for the cross-check
-uv run python scripts/bench_training.py --task RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0 --num-envs 4096
+uv run rf experiments                    # experiment files in experiments/
+uv run rf train b2w_flat_default         # train one (logs/rsl_rl/<experiment>/<run_id>/)
+uv run rf runs                           # every run: status, progress, metrics, latest eval
+uv run rf play b2w_flat_default          # watch + drive it in Newton's native viewer window
+uv run rf eval b2w_flat_default          # speed sweep vs the real robot's rated speed
+uv run python scripts/bench_training.py --task RobotLab-Isaac-Velocity-Flat-Unitree-B2W-v0   # hardware benchmark
 python scripts/upstream.py status        # pinned upstream versions; `try` tests newer ones on a branch
 ```
 

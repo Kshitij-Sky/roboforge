@@ -1,0 +1,9 @@
+# B4 "real-range": the real B2-W envelope (commands to 4.17 m/s, 40 N.m / 50 rad/s wheels [U]),
+# everything else robot_lab's. Task defined in src/roboforge/tasks/locomotion/real_range.py.
+description: B2-W flat, real speed + wheel torque envelope, Newton
+task: RoboForge-Velocity-Flat-B2W-RealRange-v0
+physics: newton_mjwarp
+num_envs: 4096
+max_iterations: 3000
+seed: 42
+overrides: {}
